@@ -1,354 +1,382 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Slider } from '@/components/ui/slider'
-import { Volume2, VolumeX, Mic, MicOff, MessageCircle, Settings, Play, Pause, SkipForward, Coffee, Music } from 'lucide-react'
+import { useState, useEffect, useRef } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Slider } from "@/components/ui/slider"
+import { Volume2, VolumeX, Mic, MicOff, MessageCircle, Settings, User, Bot } from "lucide-react"
 
 interface VoiceAssistantProps {
-  currentAlert: 'none' | 'level1' | 'level2' | 'level3'
+  currentAlert: "none" | "level1" | "level2" | "level3"
   alertnessScore: number
   isActive: boolean
 }
 
+interface Message {
+  id: number
+  type: "user" | "assistant"
+  content: string
+  timestamp: Date
+}
+
 export function VoiceAssistant({ currentAlert, alertnessScore, isActive }: VoiceAssistantProps) {
   const [isListening, setIsListening] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
   const [volume, setVolume] = useState([75])
-  const [voiceEnabled, setVoiceEnabled] = useState(true)
-  const [currentMessage, setCurrentMessage] = useState('')
-  const [conversationHistory, setConversationHistory] = useState([
-    { type: 'assistant', message: 'Hello! I\'m your AI driving co-pilot. I\'m here to keep you safe and alert.', time: '10:30 AM' },
-    { type: 'user', message: 'How am I doing so far?', time: '10:32 AM' },
-    { type: 'assistant', message: 'You\'re doing great! Your alertness score is 87%. Keep up the good work!', time: '10:32 AM' }
+  const [personality, setPersonality] = useState("friendly")
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 1,
+      type: "assistant",
+      content: "Hello! I'm your AI driving companion. I'm here to help keep you alert and safe on the road.",
+      timestamp: new Date(),
+    },
   ])
+  const [isTyping, setIsTyping] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const assistantPersonalities = [
-    { name: 'Professional', voice: 'calm', description: 'Formal and direct communication' },
-    { name: 'Friendly', voice: 'warm', description: 'Encouraging and supportive tone' },
-    { name: 'Energetic', voice: 'upbeat', description: 'High energy to keep you awake' },
-    { name: 'Zen', voice: 'peaceful', description: 'Calming and stress-reducing' }
-  ]
+  const personalities = {
+    friendly: {
+      name: "Friendly",
+      description: "Warm and encouraging",
+      color: "bg-blue-50 border-blue-200 text-blue-800",
+    },
+    professional: {
+      name: "Professional",
+      description: "Direct and informative",
+      color: "bg-slate-50 border-slate-200 text-slate-800",
+    },
+    motivational: {
+      name: "Motivational",
+      description: "Energetic and uplifting",
+      color: "bg-green-50 border-green-200 text-green-800",
+    },
+    calm: {
+      name: "Calm",
+      description: "Soothing and relaxed",
+      color: "bg-purple-50 border-purple-200 text-purple-800",
+    },
+  }
 
-  const [selectedPersonality, setSelectedPersonality] = useState('Friendly')
-
-  // Simulate voice messages based on alert level
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (!isActive || !voiceEnabled) return
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
-    let message = ''
-    switch (currentAlert) {
-      case 'level1':
-        message = 'Hey there! I noticed you might be getting a bit tired. How about we find a nice coffee shop nearby?'
-        break
-      case 'level2':
-        message = 'I\'m concerned about your alertness level. Let\'s take a break at the next rest stop, okay?'
-        break
-      case 'level3':
-        message = 'ATTENTION! Please pull over safely immediately. Your safety is my top priority.'
-        break
-      default:
-        if (Math.random() < 0.1) { // Random encouraging messages
-          const encouragements = [
-            'You\'re doing fantastic! Keep those eyes on the road.',
-            'Great driving! Your alertness score is looking good.',
-            'I love how focused you are today. Safe travels!',
-            'Perfect posture! You\'re a model driver.'
+  // Generate contextual messages based on alert level
+  useEffect(() => {
+    if (!isActive) return
+
+    const generateContextualMessage = () => {
+      let message = ""
+
+      switch (currentAlert) {
+        case "level1":
+          const level1Messages = [
+            "I notice you might be getting a bit tired. How about some fresh air?",
+            "Your blink rate suggests mild fatigue. Consider a short break soon.",
+            "You're doing great! Just a gentle reminder to stay alert.",
           ]
-          message = encouragements[Math.floor(Math.random() * encouragements.length)]
-        }
+          message = level1Messages[Math.floor(Math.random() * level1Messages.length)]
+          break
+
+        case "level2":
+          const level2Messages = [
+            "I'm detecting signs of fatigue. Please find a safe place to rest.",
+            "Your alertness has dropped. Time for a break - safety first!",
+            "Let's pull over safely. A 15-minute rest will help you feel refreshed.",
+          ]
+          message = level2Messages[Math.floor(Math.random() * level2Messages.length)]
+          break
+
+        case "level3":
+          const level3Messages = [
+            "URGENT: Please pull over immediately. Your safety is critical.",
+            "Critical fatigue detected. Find the nearest safe stopping point now.",
+            "This is serious - please stop driving and rest immediately.",
+          ]
+          message = level3Messages[Math.floor(Math.random() * level3Messages.length)]
+          break
+
+        default:
+          if (Math.random() < 0.1) {
+            // 10% chance for encouraging messages
+            const encouragingMessages = [
+              "You're maintaining excellent alertness! Keep up the great driving.",
+              "Your focus is impressive today. Safe travels!",
+              "Everything looks good from here. You're a model driver!",
+            ]
+            message = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)]
+          }
+      }
+
+      if (message) {
+        addAssistantMessage(message)
+      }
     }
 
-    if (message && message !== currentMessage) {
-      setCurrentMessage(message)
-      setIsSpeaking(true)
-      
-      // Add to conversation history
-      setConversationHistory(prev => [...prev, {
-        type: 'assistant',
-        message,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }])
+    const interval = setInterval(generateContextualMessage, 30000) // Every 30 seconds
+    return () => clearInterval(interval)
+  }, [currentAlert, isActive])
 
-      // Simulate speaking duration
-      setTimeout(() => setIsSpeaking(false), 3000)
+  const addAssistantMessage = (content: string) => {
+    setIsTyping(true)
+
+    setTimeout(() => {
+      const newMessage: Message = {
+        id: Date.now(),
+        type: "assistant",
+        content,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, newMessage])
+      setIsTyping(false)
+    }, 1000) // Simulate typing delay
+  }
+
+  const addUserMessage = (content: string) => {
+    const newMessage: Message = {
+      id: Date.now(),
+      type: "user",
+      content,
+      timestamp: new Date(),
     }
-  }, [currentAlert, isActive, voiceEnabled, currentMessage])
 
-  const handleVoiceCommand = () => {
+    setMessages((prev) => [...prev, newMessage])
+
+    // Simulate assistant response
+    setTimeout(() => {
+      const responses = [
+        "I understand. Let me help you with that.",
+        "Thanks for letting me know. I'll adjust accordingly.",
+        "Got it! I'm here to support your safe driving.",
+        "That's helpful feedback. I'll keep that in mind.",
+      ]
+      addAssistantMessage(responses[Math.floor(Math.random() * responses.length)])
+    }, 2000)
+  }
+
+  const handleQuickResponse = (response: string) => {
+    addUserMessage(response)
+  }
+
+  const toggleListening = () => {
     setIsListening(!isListening)
-    
     if (!isListening) {
       // Simulate voice recognition
       setTimeout(() => {
-        const commands = [
-          'How am I doing?',
-          'Find a coffee shop',
-          'Play some music',
-          'Tell me a joke',
-          'What\'s the weather like?'
-        ]
-        const command = commands[Math.floor(Math.random() * commands.length)]
-        
-        setConversationHistory(prev => [...prev, {
-          type: 'user',
-          message: command,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }])
-
-        // Generate response
-        let response = ''
-        switch (command) {
-          case 'How am I doing?':
-            response = `Your alertness score is ${alertnessScore}%. ${alertnessScore > 80 ? 'Excellent work!' : 'Let\'s work on staying more alert.'}`
-            break
-          case 'Find a coffee shop':
-            response = 'I found a Starbucks 1.2 miles ahead on your right. Perfect for a quick energy boost!'
-            break
-          case 'Play some music':
-            response = 'Playing your "Road Trip Energy" playlist. Let\'s keep those good vibes going!'
-            break
-          case 'Tell me a joke':
-            response = 'Why don\'t cars ever get tired? Because they always have spare energy! 😄'
-            break
-          case 'What\'s the weather like?':
-            response = 'It\'s partly cloudy, 72°F with good visibility. Perfect driving conditions!'
-            break
-          default:
-            response = 'I\'m here to help! Try asking about your driving performance or nearby stops.'
-        }
-
-        setTimeout(() => {
-          setConversationHistory(prev => [...prev, {
-            type: 'assistant',
-            message: response,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }])
-        }, 1000)
-
+        addUserMessage("I'm feeling a bit tired, but I'm okay to continue.")
         setIsListening(false)
-      }, 2000)
+      }, 3000)
     }
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
   return (
     <div className="space-y-6">
       {/* Voice Assistant Control */}
       <Card className="bg-white border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between text-xl font-bold">
-            <div className="flex items-center gap-3">
-              <Volume2 className="h-6 w-6 text-blue-500" />
-              <span className="text-slate-900">AI Voice Assistant</span>
-            </div>
-            <Badge variant={isSpeaking ? "default" : "secondary"} className="animate-pulse text-sm font-semibold px-3 py-1">
-              {isSpeaking ? 'Speaking' : 'Ready'}
-            </Badge>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3">
+            <MessageCircle className="h-6 w-6 text-green-500" />
+            AI Voice Assistant
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
-                onClick={handleVoiceCommand}
-                variant={isListening ? "destructive" : "default"}
+                onClick={() => setIsMuted(!isMuted)}
+                variant={isMuted ? "destructive" : "default"}
                 size="lg"
-                className="gap-3 text-base font-semibold px-6 py-3"
+                className="text-base font-semibold"
               >
-                {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                {isListening ? 'Stop Listening' : 'Voice Command'}
+                {isMuted ? <VolumeX className="h-5 w-5 mr-2" /> : <Volume2 className="h-5 w-5 mr-2" />}
+                {isMuted ? "Unmute" : "Mute"}
               </Button>
-              
+
               <Button
-                onClick={() => setVoiceEnabled(!voiceEnabled)}
-                variant="outline"
+                onClick={toggleListening}
+                variant={isListening ? "destructive" : "outline"}
                 size="lg"
-                className="gap-3 text-base font-semibold px-6 py-3"
+                className="text-base font-semibold"
               >
-                {voiceEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-                {voiceEnabled ? 'Mute' : 'Unmute'}
+                {isListening ? <MicOff className="h-5 w-5 mr-2" /> : <Mic className="h-5 w-5 mr-2" />}
+                {isListening ? "Stop Listening" : "Voice Input"}
               </Button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-base font-semibold text-slate-700">Volume</span>
-              <div className="w-32">
-                <Slider
-                  value={volume}
-                  onValueChange={setVolume}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-              <span className="text-base font-bold text-slate-900 w-12">{volume[0]}%</span>
-            </div>
+            <Badge variant={isActive ? "default" : "secondary"} className="text-sm font-semibold px-3 py-1">
+              {isActive ? "ACTIVE" : "STANDBY"}
+            </Badge>
           </div>
 
-          {isListening && (
-            <div className="p-5 bg-blue-500/20 border-2 border-blue-500/40 rounded-lg">
-              <div className="flex items-center gap-3 text-blue-600">
-                <Mic className="h-5 w-5 animate-pulse" />
-                <span className="text-base font-bold">Listening...</span>
-              </div>
-              <div className="text-base text-blue-700 font-medium mt-2">
-                Try saying: "How am I doing?", "Find a coffee shop", or "Play music"
-              </div>
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-base font-semibold text-slate-900">Volume</span>
+              <span className="text-lg font-bold text-slate-900">{volume[0]}%</span>
             </div>
-          )}
+            <Slider value={volume} onValueChange={setVolume} max={100} step={1} className="w-full" disabled={isMuted} />
+          </div>
 
-          {currentMessage && (
-            <div className="p-5 bg-green-500/20 border-2 border-green-500/40 rounded-lg">
-              <div className="flex items-center gap-3 text-green-600">
-                <MessageCircle className="h-5 w-5" />
-                <span className="text-base font-bold">Current Message</span>
-              </div>
-              <div className="text-base text-green-700 font-medium mt-2">{currentMessage}</div>
+          <div>
+            <span className="text-base font-semibold text-slate-900 mb-3 block">Assistant Personality</span>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(personalities).map(([key, config]) => (
+                <Button
+                  key={key}
+                  variant={personality === key ? "default" : "outline"}
+                  onClick={() => setPersonality(key)}
+                  className="text-base font-medium h-auto p-3"
+                >
+                  <div className="text-center">
+                    <div className="font-semibold">{config.name}</div>
+                    <div className="text-xs opacity-80">{config.description}</div>
+                  </div>
+                </Button>
+              ))}
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Conversation History */}
-        <Card className="bg-white border-slate-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-green-400" />
-              Conversation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-80 overflow-y-auto">
-              {conversationHistory.map((item, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-lg border-2 ${
-                    item.type === 'assistant' 
-                      ? 'bg-blue-50 border-blue-200' 
-                      : 'bg-green-50 border-green-200 ml-8'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-bold text-slate-700">
-                      {item.type === 'assistant' ? 'AI Co-Pilot' : 'You'}
-                    </span>
-                    <span className="text-sm font-medium text-slate-500">{item.time}</span>
-                  </div>
-                  <div className="text-base font-medium text-slate-800">{item.message}</div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Assistant Personality */}
-        <Card className="bg-white border-slate-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-purple-400" />
-              Assistant Personality
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {assistantPersonalities.map((personality) => (
-                <div
-                  key={personality.name}
-                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedPersonality === personality.name
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}
-                  onClick={() => setSelectedPersonality(personality.name)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-semibold">{personality.name}</div>
-                      <div className="text-sm text-slate-600">{personality.description}</div>
-                    </div>
-                    {selectedPersonality === personality.name && (
-                      <Badge variant="default">Active</Badge>
+      {/* Conversation */}
+      <Card className="bg-white border-slate-200 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold">Conversation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`flex gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      message.type === "user" ? "bg-blue-100" : "bg-green-100"
+                    }`}
+                  >
+                    {message.type === "user" ? (
+                      <User className="h-4 w-4 text-blue-600" />
+                    ) : (
+                      <Bot className="h-4 w-4 text-green-600" />
                     )}
                   </div>
+                  <div
+                    className={`p-3 rounded-lg border ${
+                      message.type === "user"
+                        ? "bg-blue-50 border-blue-200"
+                        : personalities[personality as keyof typeof personalities].color
+                    }`}
+                  >
+                    <p className="text-base font-medium">{message.content}</p>
+                    <p className="text-xs opacity-70 mt-1">{formatTime(message.timestamp)}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="pt-4 border-t border-slate-600">
-              <div className="text-sm font-medium text-slate-700 mb-2">Quick Actions</div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Coffee className="h-3 w-3" />
-                  Find Coffee
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Music className="h-3 w-3" />
-                  Play Music
-                </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            ))}
 
-      {/* Entertainment & Engagement */}
+            {isTyping && (
+              <div className="flex gap-3 justify-start">
+                <div className="flex gap-3 max-w-[80%]">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-green-100">
+                    <Bot className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div
+                    className={`p-3 rounded-lg border ${personalities[personality as keyof typeof personalities].color}`}
+                  >
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                      <div
+                        className="w-2 h-2 bg-current rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-current rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Responses */}
+          <div className="mt-6 pt-4 border-t border-slate-200">
+            <div className="text-base font-semibold text-slate-900 mb-3">Quick Responses</div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => handleQuickResponse("I'm feeling alert and focused")}
+                className="text-sm font-medium h-auto p-3"
+              >
+                I'm feeling alert
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleQuickResponse("I need a break soon")}
+                className="text-sm font-medium h-auto p-3"
+              >
+                Need a break
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleQuickResponse("Thanks for the reminder")}
+                className="text-sm font-medium h-auto p-3"
+              >
+                Thanks for reminder
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleQuickResponse("Adjust sensitivity please")}
+                className="text-sm font-medium h-auto p-3"
+              >
+                Adjust sensitivity
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Assistant Status */}
       <Card className="bg-white border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Music className="h-5 w-5 text-pink-400" />
-            Entertainment & Engagement
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3">
+            <Settings className="h-6 w-6 text-purple-500" />
+            Assistant Status
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-50 rounded-lg border">
-              <div className="flex items-center gap-2 mb-2">
-                <Music className="h-4 w-4 text-blue-400" />
-                <span className="font-semibold">Music Control</span>
-              </div>
-              <div className="space-y-2">
-                <div className="text-sm text-slate-600">Now Playing: Road Trip Hits</div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline">
-                    <Play className="h-3 w-3" />
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Pause className="h-3 w-3" />
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <SkipForward className="h-3 w-3" />
-                  </Button>
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-slate-50 rounded-lg border">
+              <div className="text-lg font-bold text-slate-900">Voice Recognition</div>
+              <div className={`text-base font-medium ${isListening ? "text-green-600" : "text-slate-600"}`}>
+                {isListening ? "Listening" : "Standby"}
               </div>
             </div>
-
-            <div className="p-4 bg-slate-50 rounded-lg border">
-              <div className="flex items-center gap-2 mb-2">
-                <MessageCircle className="h-4 w-4 text-green-400" />
-                <span className="font-semibold">Conversation Topics</span>
-              </div>
-              <div className="space-y-1 text-sm">
-                <div className="text-slate-600">• Travel stories</div>
-                <div className="text-slate-600">• Fun facts</div>
-                <div className="text-slate-600">• Driving tips</div>
-                <div className="text-slate-600">• Weather updates</div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border">
+              <div className="text-lg font-bold text-slate-900">Audio Output</div>
+              <div className={`text-base font-medium ${isMuted ? "text-red-600" : "text-green-600"}`}>
+                {isMuted ? "Muted" : "Active"}
               </div>
             </div>
-
-            <div className="p-4 bg-slate-50 rounded-lg border">
-              <div className="flex items-center gap-2 mb-2">
-                <Coffee className="h-4 w-4 text-yellow-400" />
-                <span className="font-semibold">Break Suggestions</span>
-              </div>
-              <div className="space-y-1 text-sm">
-                <div className="text-slate-600">• Nearby coffee shops</div>
-                <div className="text-slate-600">• Rest areas</div>
-                <div className="text-slate-600">• Scenic viewpoints</div>
-                <div className="text-slate-600">• Gas stations</div>
-              </div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border">
+              <div className="text-lg font-bold text-slate-900">Personality</div>
+              <div className="text-base font-medium text-blue-600 capitalize">{personality}</div>
+            </div>
+            <div className="text-center p-3 bg-slate-50 rounded-lg border">
+              <div className="text-lg font-bold text-slate-900">Messages</div>
+              <div className="text-base font-medium text-purple-600">{messages.length}</div>
             </div>
           </div>
         </CardContent>

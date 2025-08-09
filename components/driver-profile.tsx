@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Trophy, TrendingUp, Star, Award, Target, Calendar, Clock, Zap } from 'lucide-react'
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { User, Trophy, Calendar, Star, TrendingUp, Award, Clock, Eye, Coffee } from "lucide-react"
 
 interface DriverProfileProps {
   alertnessScore: number
@@ -19,168 +19,160 @@ interface DriverProfileProps {
 }
 
 export function DriverProfile({ alertnessScore, tripDuration, detectionMetrics }: DriverProfileProps) {
-  const driverStats = {
-    totalTrips: 47,
-    safeTrips: 42,
-    averageScore: 87,
-    totalDistance: 2847,
-    achievements: [
-      { name: 'Safe Driver', icon: '🛡️', description: '30 consecutive safe trips' },
-      { name: 'Alert Master', icon: '👁️', description: 'Maintained 90%+ alertness for 100 hours' },
-      { name: 'Night Owl', icon: '🌙', description: 'Safe night driving streak' },
-      { name: 'Distance Champion', icon: '🏆', description: 'Drove 1000+ miles safely' }
-    ],
-    weeklyScores: [85, 88, 92, 87, 89, 91, 86],
-    personalBests: {
-      longestSafeTrip: '8h 45m',
-      highestAlertness: '98%',
-      bestWeeklyAverage: '94%'
+  const [driverLevel, setDriverLevel] = useState(1)
+  const [experience, setExperience] = useState(0)
+  const [weeklyStats, setWeeklyStats] = useState({
+    totalTrips: 12,
+    totalDuration: 2340, // minutes
+    averageAlertness: 82,
+    safetyScore: 94,
+  })
+  const [achievements, setAchievements] = useState([
+    { id: 1, name: "Safe Driver", description: "7 days without alerts", icon: "🛡️", unlocked: true },
+    { id: 2, name: "Alert Master", description: "Maintain 90%+ alertness", icon: "👁️", unlocked: false },
+    { id: 3, name: "Long Haul", description: "Drive 5+ hours safely", icon: "🚛", unlocked: true },
+    { id: 4, name: "Perfect Week", description: "No fatigue alerts for a week", icon: "⭐", unlocked: false },
+    { id: 5, name: "Night Owl", description: "Safe night driving streak", icon: "🌙", unlocked: true },
+    { id: 6, name: "Focus Champion", description: "Perfect gaze tracking", icon: "🎯", unlocked: false },
+  ])
+
+  // Calculate driver level based on experience
+  useEffect(() => {
+    const newLevel = Math.floor(experience / 1000) + 1
+    setDriverLevel(Math.min(newLevel, 10))
+  }, [experience])
+
+  // Simulate experience gain
+  useEffect(() => {
+    if (alertnessScore > 80) {
+      setExperience((prev) => prev + 1)
     }
+  }, [alertnessScore])
+
+  const getLevelProgress = () => {
+    const currentLevelExp = (driverLevel - 1) * 1000
+    const nextLevelExp = driverLevel * 1000
+    const progress = ((experience - currentLevelExp) / (nextLevelExp - currentLevelExp)) * 100
+    return Math.max(0, Math.min(100, progress))
   }
 
-  const getCurrentLevel = () => {
-    if (driverStats.averageScore >= 95) return { level: 'Expert', color: 'text-purple-400', next: 100 }
-    if (driverStats.averageScore >= 85) return { level: 'Advanced', color: 'text-blue-400', next: 95 }
-    if (driverStats.averageScore >= 75) return { level: 'Intermediate', color: 'text-green-400', next: 85 }
-    return { level: 'Beginner', color: 'text-yellow-400', next: 75 }
+  const getDriverRank = () => {
+    if (driverLevel >= 8) return { rank: "Expert", color: "text-purple-600", bg: "bg-purple-50" }
+    if (driverLevel >= 6) return { rank: "Advanced", color: "text-blue-600", bg: "bg-blue-50" }
+    if (driverLevel >= 4) return { rank: "Intermediate", color: "text-green-600", bg: "bg-green-50" }
+    if (driverLevel >= 2) return { rank: "Novice", color: "text-yellow-600", bg: "bg-yellow-50" }
+    return { rank: "Beginner", color: "text-slate-600", bg: "bg-slate-50" }
   }
 
-  const level = getCurrentLevel()
+  const driverRank = getDriverRank()
 
   return (
     <div className="space-y-6">
-      {/* Profile Header */}
+      {/* Driver Profile Overview */}
       <Card className="bg-white border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-xl font-bold">
-              JD
-            </div>
-            <div>
-              <h2 className="text-xl">John Driver</h2>
-              <p className="text-slate-600">Safe Driving Since 2020</p>
-            </div>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3">
+            <User className="h-6 w-6 text-blue-500" />
+            Driver Profile
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{driverStats.totalTrips}</div>
-              <div className="text-sm text-slate-600">Total Trips</div>
+        <CardContent className="space-y-6">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="h-10 w-10 text-blue-600" />
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">{driverStats.safeTrips}</div>
-              <div className="text-sm text-slate-600">Safe Trips</div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-slate-900">404NotFound</h3>
+              <div className="flex items-center gap-3 mt-2">
+                <Badge className={`${driverRank.bg} ${driverRank.color} text-sm font-semibold px-3 py-1`}>
+                  Level {driverLevel} - {driverRank.rank}
+                </Badge>
+                <Badge variant="outline" className="text-sm font-medium">
+                  {experience} XP
+                </Badge>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-400">{driverStats.averageScore}%</div>
-              <div className="text-sm text-slate-600">Avg. Score</div>
+            <div className="text-right">
+              <div className="text-sm font-medium text-slate-600">Current Session</div>
+              <div className="text-2xl font-bold text-slate-900">{alertnessScore}%</div>
+              <div className="text-sm font-medium text-slate-600">Alertness</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">{driverStats.totalDistance}</div>
-              <div className="text-sm text-slate-600">Miles Driven</div>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-base font-semibold mb-2">
+              <span className="text-slate-700">Level Progress</span>
+              <span className="text-slate-900">{Math.round(getLevelProgress())}%</span>
+            </div>
+            <Progress value={getLevelProgress()} className="h-3" />
+            <div className="flex justify-between text-sm text-slate-600 font-medium mt-1">
+              <span>Level {driverLevel}</span>
+              <span>Level {driverLevel + 1}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Driver Level & Progress */}
-        <Card className="bg-white border-slate-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-400" />
-              Driver Level
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center">
-              <div className={`text-3xl font-bold ${level.color}`}>{level.level}</div>
-              <div className="text-sm text-slate-600">Current Level</div>
+      {/* Weekly Performance */}
+      <Card className="bg-white border-slate-200 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3">
+            <Calendar className="h-6 w-6 text-green-500" />
+            Weekly Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-2xl font-bold text-blue-900">{weeklyStats.totalTrips}</div>
+              <div className="text-base font-medium text-blue-700">Total Trips</div>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Progress to next level</span>
-                <span>{driverStats.averageScore}% / {level.next}%</span>
-              </div>
-              <Progress value={(driverStats.averageScore / level.next) * 100} className="h-3" />
+            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="text-2xl font-bold text-green-900">{Math.round(weeklyStats.totalDuration / 60)}h</div>
+              <div className="text-base font-medium text-green-700">Drive Time</div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div className="text-center p-3 bg-slate-50 rounded-lg border">
-                <Star className="h-6 w-6 text-yellow-400 mx-auto mb-1" />
-                <div className="text-sm font-semibold">4.8/5.0</div>
-                <div className="text-xs text-slate-600">Safety Rating</div>
-              </div>
-              <div className="text-center p-3 bg-slate-50 rounded-lg border">
-                <Award className="h-6 w-6 text-purple-400 mx-auto mb-1" />
-                <div className="text-sm font-semibold">12</div>
-                <div className="text-xs text-slate-600">Achievements</div>
-              </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="text-2xl font-bold text-purple-900">{weeklyStats.averageAlertness}%</div>
+              <div className="text-base font-medium text-purple-700">Avg Alertness</div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Personal Bests */}
-        <Card className="bg-white border-slate-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-green-400" />
-              Personal Bests
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm">Longest Safe Trip</span>
-                </div>
-                <span className="font-semibold">{driverStats.personalBests.longestSafeTrip}</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-yellow-400" />
-                  <span className="text-sm">Highest Alertness</span>
-                </div>
-                <span className="font-semibold">{driverStats.personalBests.highestAlertness}</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-400" />
-                  <span className="text-sm">Best Weekly Avg</span>
-                </div>
-                <span className="font-semibold">{driverStats.personalBests.bestWeeklyAverage}</span>
-              </div>
+            <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <div className="text-2xl font-bold text-orange-900">{weeklyStats.safetyScore}%</div>
+              <div className="text-base font-medium text-orange-700">Safety Score</div>
             </div>
-
-            <Button className="w-full" variant="outline">
-              <Calendar className="h-4 w-4 mr-2" />
-              View Detailed History
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Achievements */}
       <Card className="bg-white border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-purple-400" />
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3">
+            <Trophy className="h-6 w-6 text-yellow-500" />
             Achievements
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {driverStats.achievements.map((achievement, index) => (
-              <div key={index} className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg border">
-                <div className="text-2xl">{achievement.icon}</div>
-                <div>
-                  <div className="font-semibold">{achievement.name}</div>
-                  <div className="text-sm text-slate-600">{achievement.description}</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {achievements.map((achievement) => (
+              <div
+                key={achievement.id}
+                className={`p-4 rounded-lg border ${
+                  achievement.unlocked ? "bg-yellow-50 border-yellow-200" : "bg-slate-50 border-slate-200"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{achievement.icon}</span>
+                  <div className="flex-1">
+                    <h4 className={`text-lg font-bold ${achievement.unlocked ? "text-yellow-900" : "text-slate-600"}`}>
+                      {achievement.name}
+                    </h4>
+                    <p className={`text-sm font-medium ${achievement.unlocked ? "text-yellow-700" : "text-slate-500"}`}>
+                      {achievement.description}
+                    </p>
+                  </div>
+                  {achievement.unlocked && (
+                    <Badge className="bg-yellow-600 text-white text-xs font-semibold">Unlocked</Badge>
+                  )}
                 </div>
               </div>
             ))}
@@ -188,41 +180,99 @@ export function DriverProfile({ alertnessScore, tripDuration, detectionMetrics }
         </CardContent>
       </Card>
 
-      {/* Weekly Performance */}
+      {/* Personal Bests */}
       <Card className="bg-white border-slate-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-400" />
-            Weekly Performance
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3">
+            <Star className="h-6 w-6 text-purple-500" />
+            Personal Bests
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="grid grid-cols-7 gap-2">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                <div key={day} className="text-center">
-                  <div className="text-xs text-slate-600 mb-2">{day}</div>
-                  <div className="h-20 bg-slate-50 rounded flex items-end justify-center p-1 border">
-                    <div 
-                      className="w-full bg-blue-500 rounded-sm"
-                      style={{ height: `${(driverStats.weeklyScores[index] / 100) * 100}%` }}
-                    />
-                  </div>
-                  <div className="text-xs font-semibold mt-1">{driverStats.weeklyScores[index]}%</div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex justify-between items-center pt-4 border-t border-slate-600">
-              <div>
-                <div className="text-sm text-slate-600">This Week Average</div>
-                <div className="text-xl font-bold">
-                  {Math.round(driverStats.weeklyScores.reduce((a, b) => a + b, 0) / driverStats.weeklyScores.length)}%
+            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center gap-3">
+                <Award className="h-6 w-6 text-green-600" />
+                <div>
+                  <div className="text-lg font-bold text-green-900">Longest Safe Drive</div>
+                  <div className="text-sm font-medium text-green-700">Without any alerts</div>
                 </div>
               </div>
-              <Badge variant="default" className="bg-green-600">
-                +3% from last week
-              </Badge>
+              <div className="text-2xl font-bold text-green-900">8h 45m</div>
+            </div>
+
+            <div className="flex justify-between items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-3">
+                <Eye className="h-6 w-6 text-blue-600" />
+                <div>
+                  <div className="text-lg font-bold text-blue-900">Best Alertness Score</div>
+                  <div className="text-sm font-medium text-blue-700">Peak performance</div>
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-blue-900">98%</div>
+            </div>
+
+            <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="flex items-center gap-3">
+                <Clock className="h-6 w-6 text-purple-600" />
+                <div>
+                  <div className="text-lg font-bold text-purple-900">Consecutive Safe Days</div>
+                  <div className="text-sm font-medium text-purple-700">Current streak</div>
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-purple-900">12 days</div>
+            </div>
+
+            <div className="flex justify-between items-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <div className="flex items-center gap-3">
+                <Coffee className="h-6 w-6 text-orange-600" />
+                <div>
+                  <div className="text-lg font-bold text-orange-900">Lowest Fatigue Incidents</div>
+                  <div className="text-sm font-medium text-orange-700">Weekly record</div>
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-orange-900">0</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Driving Insights */}
+      <Card className="bg-white border-slate-200 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3">
+            <TrendingUp className="h-6 w-6 text-indigo-500" />
+            Driving Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+              <h4 className="text-lg font-bold text-indigo-900 mb-2">Personalized Recommendations</h4>
+              <ul className="space-y-2 text-base font-medium text-indigo-800">
+                <li>• Your alertness peaks between 10 AM - 2 PM</li>
+                <li>• Consider breaks every 2 hours for optimal performance</li>
+                <li>• Night driving shows 15% lower alertness scores</li>
+                <li>• Blink rate is most stable during highway driving</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <h4 className="text-lg font-bold text-green-900 mb-2">Strengths</h4>
+              <ul className="space-y-2 text-base font-medium text-green-800">
+                <li>• Excellent head pose stability (92% average)</li>
+                <li>• Consistent gaze tracking performance</li>
+                <li>• Quick response to Level 1 alerts</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <h4 className="text-lg font-bold text-yellow-900 mb-2">Areas for Improvement</h4>
+              <ul className="space-y-2 text-base font-medium text-yellow-800">
+                <li>• Blink rate varies during long trips</li>
+                <li>• Consider more frequent breaks after 3+ hours</li>
+                <li>• Monitor caffeine intake timing</li>
+              </ul>
             </div>
           </div>
         </CardContent>

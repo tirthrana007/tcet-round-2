@@ -1,64 +1,84 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useRef } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Eye, Camera, AlertTriangle, Shield, Brain, Trophy, MapPin, Clock, Zap, Heart, Volume2, Settings, Play, Pause, Coffee } from 'lucide-react'
-import { CameraFeed } from '@/components/camera-feed'
-import { AlertSystem } from '@/components/alert-system'
-import { MetricsDashboard } from '@/components/metrics-dashboard'
-import { DriverProfile } from '@/components/driver-profile'
-import { EnvironmentalContext } from '@/components/environmental-context'
-import { VoiceAssistant } from '@/components/voice-assistant'
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Eye,
+  Camera,
+  AlertTriangle,
+  Shield,
+  Brain,
+  Trophy,
+  MapPin,
+  Zap,
+  Heart,
+  Volume2,
+  Play,
+  Pause,
+  Coffee,
+} from "lucide-react"
+import { CameraFeed } from "@/components/camera-feed"
+import { AlertSystem } from "@/components/alert-system"
+import { MetricsDashboard } from "@/components/metrics-dashboard"
+import { DriverProfile } from "@/components/driver-profile"
+import { EnvironmentalContext } from "@/components/environmental-context"
+import { VoiceAssistant } from "@/components/voice-assistant"
 
 export default function DriverAlertnessCopilot() {
   const [isActive, setIsActive] = useState(false)
   const [alertnessScore, setAlertnessScore] = useState(85)
-  const [currentAlert, setCurrentAlert] = useState<'none' | 'level1' | 'level2' | 'level3'>('none')
+  const [currentAlert, setCurrentAlert] = useState<"none" | "level1" | "level2" | "level3">("none")
   const [tripDuration, setTripDuration] = useState(0)
   const [detectionMetrics, setDetectionMetrics] = useState({
     blinkRate: 18,
     yawnCount: 2,
     headPoseStability: 92,
-    gazeDirection: 'forward',
-    emotionalState: 'alert'
+    gazeDirection: "forward",
+    emotionalState: "alert",
   })
+  const [cameraRequested, setCameraRequested] = useState(false)
 
   // Simulate real-time updates
   useEffect(() => {
     if (!isActive) return
 
     const interval = setInterval(() => {
-      setTripDuration(prev => prev + 1)
-      
+      setTripDuration((prev) => prev + 1)
+
       // Simulate changing metrics
-      setDetectionMetrics(prev => ({
+      setDetectionMetrics((prev) => ({
         ...prev,
         blinkRate: Math.max(10, Math.min(30, prev.blinkRate + (Math.random() - 0.5) * 4)),
         yawnCount: prev.yawnCount + (Math.random() < 0.02 ? 1 : 0),
-        headPoseStability: Math.max(70, Math.min(100, prev.headPoseStability + (Math.random() - 0.5) * 10))
+        headPoseStability: Math.max(70, Math.min(100, prev.headPoseStability + (Math.random() - 0.5) * 10)),
       }))
 
       // Update alertness score based on metrics
-      const newScore = Math.max(20, Math.min(100, 
-        100 - (detectionMetrics.yawnCount * 5) - 
-        (Math.abs(detectionMetrics.blinkRate - 15) * 2) -
-        (100 - detectionMetrics.headPoseStability)
-      ))
+      const newScore = Math.max(
+        20,
+        Math.min(
+          100,
+          100 -
+            detectionMetrics.yawnCount * 5 -
+            Math.abs(detectionMetrics.blinkRate - 15) * 2 -
+            (100 - detectionMetrics.headPoseStability),
+        ),
+      )
       setAlertnessScore(newScore)
 
       // Trigger alerts based on score
       if (newScore < 40) {
-        setCurrentAlert('level3')
+        setCurrentAlert("level3")
       } else if (newScore < 60) {
-        setCurrentAlert('level2')
+        setCurrentAlert("level2")
       } else if (newScore < 75) {
-        setCurrentAlert('level1')
+        setCurrentAlert("level1")
       } else {
-        setCurrentAlert('none')
+        setCurrentAlert("none")
       }
     }, 1000)
 
@@ -66,17 +86,24 @@ export default function DriverAlertnessCopilot() {
   }, [isActive, detectionMetrics])
 
   const getAlertColor = () => {
-    if (alertnessScore >= 80) return 'text-green-500'
-    if (alertnessScore >= 60) return 'text-yellow-500'
-    if (alertnessScore >= 40) return 'text-orange-500'
-    return 'text-red-500'
+    if (alertnessScore >= 80) return "text-green-500"
+    if (alertnessScore >= 60) return "text-yellow-500"
+    if (alertnessScore >= 40) return "text-orange-500"
+    return "text-red-500"
   }
 
   const getScoreColor = () => {
-    if (alertnessScore >= 80) return 'bg-green-500'
-    if (alertnessScore >= 60) return 'bg-yellow-500'
-    if (alertnessScore >= 40) return 'bg-orange-500'
-    return 'bg-red-500'
+    if (alertnessScore >= 80) return "bg-green-500"
+    if (alertnessScore >= 60) return "bg-yellow-500"
+    if (alertnessScore >= 40) return "bg-orange-500"
+    return "bg-red-500"
+  }
+
+  const handleToggleMonitoring = () => {
+    if (!isActive) {
+      setCameraRequested(true)
+    }
+    setIsActive(!isActive)
   }
 
   return (
@@ -94,23 +121,21 @@ export default function DriverAlertnessCopilot() {
                 <p className="text-lg text-slate-600 font-medium">Advanced Alertness Monitoring System</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div className="text-base font-semibold text-slate-600">Alertness Score</div>
-                <div className={`text-4xl font-bold ${getAlertColor()}`}>
-                  {alertnessScore}%
-                </div>
+                <div className={`text-4xl font-bold ${getAlertColor()}`}>{alertnessScore}%</div>
               </div>
-              
+
               <Button
-                onClick={() => setIsActive(!isActive)}
+                onClick={handleToggleMonitoring}
                 variant={isActive ? "destructive" : "default"}
                 size="lg"
                 className="gap-2 text-lg px-6 py-3 font-semibold"
               >
                 {isActive ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-                {isActive ? 'Stop Monitoring' : 'Start Monitoring'}
+                {isActive ? "Stop Monitoring" : "Start Monitoring"}
               </Button>
             </div>
           </div>
@@ -146,11 +171,7 @@ export default function DriverAlertnessCopilot() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Camera Feed */}
               <div className="lg:col-span-2">
-                <CameraFeed 
-                  isActive={isActive}
-                  detectionMetrics={detectionMetrics}
-                  alertnessScore={alertnessScore}
-                />
+                <CameraFeed isActive={isActive} detectionMetrics={detectionMetrics} alertnessScore={alertnessScore} />
               </div>
 
               {/* Real-time Metrics */}
@@ -170,7 +191,7 @@ export default function DriverAlertnessCopilot() {
                       </div>
                       <Progress value={alertnessScore} className="h-3" />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4 text-base">
                       <div className="bg-slate-50 p-4 rounded-lg border">
                         <div className="text-slate-600 font-medium mb-1">Blink Rate</div>
@@ -186,14 +207,18 @@ export default function DriverAlertnessCopilot() {
                       </div>
                       <div className="bg-slate-50 p-4 rounded-lg border">
                         <div className="text-slate-600 font-medium mb-1">Emotion</div>
-                        <div className="text-2xl font-bold text-slate-900 capitalize">{detectionMetrics.emotionalState}</div>
+                        <div className="text-2xl font-bold text-slate-900 capitalize">
+                          {detectionMetrics.emotionalState}
+                        </div>
                       </div>
                     </div>
 
                     <div className="pt-3 border-t border-slate-200">
                       <div className="flex items-center justify-between text-base font-medium">
                         <span className="text-slate-600">Trip Duration</span>
-                        <span className="text-lg font-bold text-slate-900">{Math.floor(tripDuration / 60)}:{(tripDuration % 60).toString().padStart(2, '0')}</span>
+                        <span className="text-lg font-bold text-slate-900">
+                          {Math.floor(tripDuration / 60)}:{(tripDuration % 60).toString().padStart(2, "0")}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -205,11 +230,7 @@ export default function DriverAlertnessCopilot() {
             </div>
 
             {/* Bottom Metrics */}
-            <MetricsDashboard 
-              isActive={isActive}
-              tripDuration={tripDuration}
-              detectionMetrics={detectionMetrics}
-            />
+            <MetricsDashboard isActive={isActive} tripDuration={tripDuration} detectionMetrics={detectionMetrics} />
           </TabsContent>
 
           <TabsContent value="detection">
@@ -277,8 +298,8 @@ export default function DriverAlertnessCopilot() {
                     <div className="text-2xl font-bold capitalize">{detectionMetrics.emotionalState}</div>
                     <div className="text-sm text-slate-400">Current State</div>
                     <div className="flex gap-1">
-                      {['alert', 'tired', 'stressed', 'bored'].map((emotion) => (
-                        <Badge 
+                      {["alert", "tired", "stressed", "bored"].map((emotion) => (
+                        <Badge
                           key={emotion}
                           variant={emotion === detectionMetrics.emotionalState ? "default" : "outline"}
                           className="text-xs"
@@ -326,7 +347,7 @@ export default function DriverAlertnessCopilot() {
           </TabsContent>
 
           <TabsContent value="profile">
-            <DriverProfile 
+            <DriverProfile
               alertnessScore={alertnessScore}
               tripDuration={tripDuration}
               detectionMetrics={detectionMetrics}
@@ -338,11 +359,7 @@ export default function DriverAlertnessCopilot() {
           </TabsContent>
 
           <TabsContent value="assistant">
-            <VoiceAssistant 
-              currentAlert={currentAlert}
-              alertnessScore={alertnessScore}
-              isActive={isActive}
-            />
+            <VoiceAssistant currentAlert={currentAlert} alertnessScore={alertnessScore} isActive={isActive} />
           </TabsContent>
         </Tabs>
       </div>
